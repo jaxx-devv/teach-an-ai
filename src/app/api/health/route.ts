@@ -4,6 +4,7 @@ import { callModel } from "@/lib/model-client";
 export async function GET() {
   const missingRequired: string[] = [];
   if (!process.env.MONGODB_URI) missingRequired.push("MONGODB_URI");
+  if (!process.env.GITHUB_CLIENT_ID) missingRequired.push("GITHUB_CLIENT_ID");
   if (!process.env.GITHUB_CLIENT_SECRET) missingRequired.push("GITHUB_CLIENT_SECRET");
   if (!process.env.SESSION_SECRET) missingRequired.push("SESSION_SECRET");
 

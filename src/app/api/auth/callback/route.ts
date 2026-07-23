@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GITHUB } from "@/lib/constants";
+import { getGitHubOAuthConfig } from "@/lib/github-oauth";
 import { createSession } from "@/lib/session";
 import { upsertGitHubUser } from "@/lib/db";
 
@@ -8,8 +8,14 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const state = req.nextUrl.searchParams.get("state");
   const storedState = req.cookies.get("oauth_state")?.value;
+  const github = getGitHubOAuthConfig();
 
-  if (!process.env.GITHUB_CLIENT_SECRET || !process.env.MONGODB_URI || !process.env.SESSION_SECRET) {
+  if (
+    !github ||
+    !process.env.GITHUB_CLIENT_SECRET ||
+    !process.env.MONGODB_URI ||
+    !process.env.SESSION_SECRET
+  ) {
     return NextResponse.redirect(new URL("/down?reason=github_oauth", origin));
   }
 
@@ -18,14 +24,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const tokenRes = await fetch(GITHUB.tokenUrl, {
+    const tokenRes = await fetch(github.tokenUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        client_id: GITHUB.clientId,
+        client_id: github.clientId,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri: GITHUB.callbackUrl,
+        redirect_uri: github.callbackUrl,
       }),
     });
     const tokenData = await tokenRes.json();
@@ -33,7 +39,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL("/?error=oauth_failed", origin));
     }
 
-    const userRes = await fetch(GITHUB.userUrl, {
+    const userRes = await fetch(github.userUrl, {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     if (!userRes.ok) {
