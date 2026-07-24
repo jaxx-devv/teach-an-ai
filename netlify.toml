@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "GITHUB_MODELS_ENDPOINT,GITHUB_MODELS_MODEL"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
